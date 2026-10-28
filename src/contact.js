@@ -5,7 +5,7 @@ const EMAIL = "sanmansilwal@gmail.com";
 // Formspree form ID: the part after /f/ in the form's endpoint (e.g. "xqazbkpo").
 // When set, enquiries are delivered straight to the inbox. When empty, the form
 // falls back to opening the visitor's own email app with the message filled in.
-const FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_ID || "";
+const FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_ID || "xjyyrbrz";
 
 const MODES = {
   hire: { submit: "Send hiring enquiry" },
