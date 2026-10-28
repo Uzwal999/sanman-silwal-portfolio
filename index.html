@@ -9,6 +9,16 @@
       content="Sanman Silwal — HR & Compliance professional in Kathmandu with 8+ years in talent acquisition, employee relations and HR operations, recruiting across Nepal, the UK, USA, Canada, Dubai and Australia."
     />
     <meta name="theme-color" content="#0a0b10" />
+    <script>
+      // Apply the saved (or system) theme before first paint to avoid a flash.
+      (function () {
+        var t;
+        try { t = localStorage.getItem("theme"); } catch (e) {}
+        if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        document.querySelector('meta[name="theme-color"]').content = t === "light" ? "#f5f3ee" : "#0a0b10";
+      })();
+    </script>
     <meta property="og:title" content="Sanman Silwal — HR Manager & Talent Acquisition" />
     <meta property="og:description" content="People-first HR leader. 8+ years hiring, developing and retaining talent across Nepal, the UK, USA, Canada, Dubai & Australia." />
     <meta property="og:image" content="./og-image.jpg" />
@@ -43,6 +53,15 @@
         <a href="#contact" class="roll" data-cursor="link">Contact</a>
       </nav>
       <div class="nav__actions">
+        <button class="theme-toggle" aria-label="Switch to light mode" data-cursor="link">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <mask id="moon-cut"><rect width="24" height="24" fill="#fff" /><circle class="theme-toggle__cut" cx="24" cy="4" r="7" fill="#000" /></mask>
+            <circle class="theme-toggle__core" cx="12" cy="12" r="5" mask="url(#moon-cut)" />
+            <g class="theme-toggle__rays">
+              <path d="M12 1.5v2.5M12 20v2.5M22.5 12H20M4 12H1.5M19.4 4.6l-1.8 1.8M6.4 17.6l-1.8 1.8M19.4 19.4l-1.8-1.8M6.4 6.4L4.6 4.6" />
+            </g>
+          </svg>
+        </button>
         <a href="#connect" class="btn btn--primary btn--sm" data-mode="hire" data-magnetic>Hire me</a>
         <button class="nav__burger" aria-label="Open menu" aria-expanded="false" aria-controls="menu">
           <span></span><span></span>

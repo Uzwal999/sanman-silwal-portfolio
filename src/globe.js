@@ -13,6 +13,20 @@ const CITIES = [
   { name: "Sydney", label: "Sydney, Australia", lat: -33.87, lng: 151.21 },
 ];
 
+// Additive glow disappears on a light page, so light mode uses normal blending and deeper hues.
+const THEMES = {
+  dark: {
+    dotA: "#5eead4", dotB: "#a78bfa", core: "#0c1018", coreOpacity: 0.92, grid: "#5eead4", gridOpacity: 0.045,
+    atmosphere: "#3cc7b8", arc: "#5eead4", arcHighlight: "#ffffff", arcBase: 0.14,
+    home: "#fbbf24", city: "#5eead4", blending: THREE.AdditiveBlending,
+  },
+  light: {
+    dotA: "#0d9488", dotB: "#7c3aed", core: "#ffffff", coreOpacity: 0.85, grid: "#0d9488", gridOpacity: 0.08,
+    atmosphere: "#2dd4bf", arc: "#0d9488", arcHighlight: "#0f766e", arcBase: 0.25,
+    home: "#d97706", city: "#0d9488", blending: THREE.NormalBlending,
+  },
+};
+
 function toVec(lat, lng, r = R) {
   const phi = (90 - lat) * DEG;
   const theta = (lng + 180) * DEG;
@@ -123,6 +137,8 @@ function makeArc(from, to) {
       uTime: { value: 0 },
       uOffset: { value: Math.random() },
       uColor: { value: new THREE.Color("#5eead4") },
+      uHighlight: { value: new THREE.Color("#ffffff") },
+      uBase: { value: 0.14 },
     },
     vertexShader: /* glsl */ `
       varying vec2 vUv;
@@ -135,13 +151,14 @@ function makeArc(from, to) {
       uniform float uTime;
       uniform float uOffset;
       uniform vec3 uColor;
+      uniform vec3 uHighlight;
+      uniform float uBase;
       varying vec2 vUv;
       void main() {
         float head = fract(uTime * 0.22 + uOffset) * 1.6 - 0.3;
         float trail = smoothstep(head - 0.35, head, vUv.x) * step(vUv.x, head);
-        float base = 0.14;
-        float glow = max(base, trail);
-        gl_FragColor = vec4(mix(uColor, vec3(1.0), trail * 0.5), glow);
+        float glow = max(uBase, trail);
+        gl_FragColor = vec4(mix(uColor, uHighlight, trail * 0.5), glow);
       }
     `,
   });
@@ -192,7 +209,8 @@ export function createGlobe(canvas, labelsEl) {
 
   const dots = makeDots();
   globe.add(dots);
-  scene.add(makeAtmosphere());
+  const atmosphere = makeAtmosphere();
+  scene.add(atmosphere);
 
   const arcs = CITIES.map((c) => makeArc(HOME, c));
   arcs.forEach((a) => globe.add(a));
@@ -336,7 +354,32 @@ export function createGlobe(canvas, labelsEl) {
   }
   frame();
 
+  function setTheme(name) {
+    const t = THEMES[name] || THEMES.dark;
+    dots.material.uniforms.uColorA.value.set(t.dotA);
+    dots.material.uniforms.uColorB.value.set(t.dotB);
+    core.material.color.set(t.core);
+    core.material.opacity = t.coreOpacity;
+    grid.material.color.set(t.grid);
+    grid.material.opacity = t.gridOpacity;
+    atmosphere.material.uniforms.uColor.value.set(t.atmosphere);
+    atmosphere.material.blending = t.blending;
+    atmosphere.material.needsUpdate = true;
+    arcs.forEach((a) => {
+      a.material.uniforms.uColor.value.set(t.arc);
+      a.material.uniforms.uHighlight.value.set(t.arcHighlight);
+      a.material.uniforms.uBase.value = t.arcBase;
+      a.material.blending = t.blending;
+      a.material.needsUpdate = true;
+    });
+    markers.forEach((m, i) =>
+      m.children.forEach((c) => c.material.color.set(i === 0 ? t.home : t.city))
+    );
+  }
+  setTheme(document.documentElement.dataset.theme);
+
   return {
+    setTheme,
     flyTo(name) {
       const entry = labelData.find((l) => l.city.name === name);
       if (!entry) return;

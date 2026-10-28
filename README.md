@@ -8,6 +8,7 @@ Personal interactive 3D portfolio for **Sanman Silwal**, HR Manager & Talent Acq
 - **Sticky stage** — the portrait and globe glide aside as the About section scrolls in.
 - **Toolkit bubbles** — glossy 3D spheres with simple physics that react to the cursor; tap to scatter.
 - Loader, custom cursor, letter-by-letter text reveals, rotating roles, scroll-drawn career timeline, 3D-tilt "Areas of impact" carousel, live Kathmandu clock.
+- Light and dark themes (follows the system setting until the visitor picks one; remembered per browser).
 - Responsive down to phones, and respects `prefers-reduced-motion`.
 
 ## Stack

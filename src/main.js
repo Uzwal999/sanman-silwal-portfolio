@@ -607,6 +607,49 @@ $$(".chip[data-city]").forEach((chip) =>
   })
 );
 marquee();
+
+/* ---------- Theme ---------- */
+
+const root = document.documentElement;
+const themeBtn = $(".theme-toggle");
+
+function applyTheme(theme, save) {
+  root.dataset.theme = theme;
+  $('meta[name="theme-color"]').content = theme === "light" ? "#f5f3ee" : "#0a0b10";
+  themeBtn.setAttribute("aria-label", `Switch to ${theme === "light" ? "dark" : "light"} mode`);
+  globe.setTheme(theme);
+  if (save) {
+    try {
+      localStorage.setItem("theme", theme);
+    } catch {}
+  }
+}
+applyTheme(root.dataset.theme);
+
+themeBtn.addEventListener("click", () => {
+  const next = root.dataset.theme === "light" ? "dark" : "light";
+  if (!document.startViewTransition || reduceMotion) return applyTheme(next, true);
+  // Reveal the new theme as a circle growing out of the button.
+  const r = themeBtn.getBoundingClientRect();
+  const x = r.left + r.width / 2;
+  const y = r.top + r.height / 2;
+  const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  document.startViewTransition(() => applyTheme(next, true)).ready.then(() =>
+    root.animate(
+      { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+      { duration: 750, easing: "cubic-bezier(0.7, 0, 0.2, 1)", pseudoElement: "::view-transition-new(root)" }
+    )
+  );
+});
+
+// Follow the system setting until the visitor picks a theme themselves.
+matchMedia("(prefers-color-scheme: light)").addEventListener("change", (e) => {
+  let saved;
+  try {
+    saved = localStorage.getItem("theme");
+  } catch {}
+  if (!saved) applyTheme(e.matches ? "light" : "dark");
+});
 carousel();
 clock();
 scrollAnimations();
