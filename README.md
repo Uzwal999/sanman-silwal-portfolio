@@ -30,4 +30,10 @@ Content (career, areas of impact, toolkit labels) lives in `src/data.js`; page c
 
 ## Deploy
 
-`.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `main`. Enable it once under **Settings → Pages → Source: GitHub Actions**. The build uses a relative base path, so `dist/` also works on Netlify, Vercel or any static host.
+Live at **https://www.sanmansilwal.com.np** (the bare `sanmansilwal.com.np` redirects there).
+
+Hosted on **Vercel**, connected to this GitHub repo: every push to `main` builds (`npm run build` → `dist/`) and goes live in about a minute. The domain's nameservers point to Vercel DNS (`ns1.vercel-dns.com`, `ns2.vercel-dns.com`), set at register.com.np.
+
+The contact form sends through Formspree (form ID in `src/contact.js`); if Formspree is unreachable it falls back to opening the visitor's email app.
+
+The build uses a relative base path, so `dist/` also works on any other static host.
