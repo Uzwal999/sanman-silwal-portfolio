@@ -180,17 +180,24 @@ if (finePointer && !reduceMotion) {
   // 3D tilt with a moving glare
   $$("[data-tilt], .cred").forEach((el) => {
     gsap.set(el, { transformPerspective: 800 });
+    const rx = gsap.quickTo(el, "rotateX", { duration: 0.5, ease: "power2.out" });
+    const ry = gsap.quickTo(el, "rotateY", { duration: 0.5, ease: "power2.out" });
+    let rect;
+    el.addEventListener("pointerenter", () => (rect = el.getBoundingClientRect()));
     el.addEventListener("pointermove", (e) => {
-      const r = el.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width;
-      const y = (e.clientY - r.top) / r.height;
+      rect ||= el.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
       el.style.setProperty("--gx", `${x * 100}%`);
       el.style.setProperty("--gy", `${y * 100}%`);
-      gsap.to(el, { rotateY: (x - 0.5) * 10, rotateX: (0.5 - y) * 10, duration: 0.5, ease: "power2.out" });
+      ry((x - 0.5) * 10);
+      rx((0.5 - y) * 10);
     });
-    el.addEventListener("pointerleave", () =>
-      gsap.to(el, { rotateY: 0, rotateX: 0, duration: 0.8, ease: "power3.out" })
-    );
+    el.addEventListener("pointerleave", () => {
+      rect = null;
+      rx(0);
+      ry(0);
+    });
   });
 
   // Portrait drifts against the cursor for depth
@@ -205,23 +212,32 @@ if (finePointer && !reduceMotion) {
 /* ---------- Marquee ---------- */
 
 function marquee() {
+  const el = $(".marquee");
   const rows = $$(".marquee__row").map((row, i) => {
     const track = $(".marquee__track", row);
     track.innerHTML += track.innerHTML;
-    return { track, x: 0, dir: i % 2 ? 1 : -1 };
+    return { track, x: 0, half: 0, dir: i % 2 ? 1 : -1, speed: i % 2 ? 26 : 34 };
   });
+  // Width is measured on resize only; reading it every frame forced a layout.
+  const measure = () => rows.forEach((r) => (r.half = r.track.scrollWidth / 2));
+  new ResizeObserver(measure).observe(el);
+  document.fonts?.ready.then(measure);
+
+  let onScreen = false;
+  new IntersectionObserver(([e]) => (onScreen = e.isIntersecting)).observe(el);
+
   let boost = 0;
   let flip = 1;
   gsap.ticker.add((_, dt) => {
+    if (!onScreen || reduceMotion) return;
     const v = lenis ? lenis.velocity : 0;
     if (Math.abs(v) > 0.5) flip = Math.sign(v);
-    boost += (Math.min(Math.abs(v), 40) - boost) * 0.08;
+    boost += (Math.min(Math.abs(v), 30) - boost) * 0.08;
     rows.forEach((r) => {
-      const half = r.track.scrollWidth / 2;
-      if (!half) return;
-      r.x += r.dir * flip * (40 + boost * 18) * (dt / 1000);
-      r.x = ((r.x % half) - half) % half;
-      r.track.style.transform = `translate3d(${r.x}px,0,0) skewX(${-r.dir * flip * Math.min(boost, 20) * 0.4}deg)`;
+      if (!r.half) return;
+      r.x += r.dir * flip * (r.speed + boost * 6) * (dt / 1000);
+      r.x = ((r.x % r.half) - r.half) % r.half;
+      r.track.style.transform = `translate3d(${r.x.toFixed(1)}px,0,0)`;
     });
   });
 }
@@ -239,9 +255,12 @@ if (finePointer && !reduceMotion) {
   });
   document.addEventListener("pointerleave", () => cursor.classList.remove("is-visible"));
   gsap.ticker.add(() => {
-    pos.x += (target.x - pos.x) * 0.2;
-    pos.y += (target.y - pos.y) * 0.2;
-    cursor.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+    const dx = target.x - pos.x;
+    const dy = target.y - pos.y;
+    if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) return;
+    pos.x += dx * 0.2;
+    pos.y += dy * 0.2;
+    cursor.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
   });
   document.addEventListener("pointerover", (e) => {
     cursor.classList.toggle("is-link", !!e.target.closest("[data-cursor=link], a, button"));

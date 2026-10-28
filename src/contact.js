@@ -1,6 +1,6 @@
 import gsap from "gsap";
 
-const EMAIL = "sanmansilwal1@gmail.com";
+const EMAIL = "sanmansilwal@gmail.com";
 
 const MODES = {
   hire: { submit: "Send hiring enquiry" },

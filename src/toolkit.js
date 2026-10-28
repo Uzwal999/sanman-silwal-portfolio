@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { adaptivePixelRatio } from "./quality.js";
 
 const PALETTE = [
   { bg: "#5eead4", fg: "#05211d" },
@@ -11,22 +12,23 @@ const PALETTE = [
 
 // Equirectangular label texture; three.js maps u = 0.25 to the side facing +z.
 function labelTexture(text, { bg, fg }) {
+  // 512x256 keeps labels crisp at bubble size while using a quarter of the GPU memory.
   const c = document.createElement("canvas");
-  c.width = 1024;
-  c.height = 512;
+  c.width = 512;
+  c.height = 256;
   const ctx = c.getContext("2d");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, c.width, c.height);
   ctx.fillStyle = fg;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  let size = 64;
+  let size = 32;
   ctx.font = `700 ${size}px Geist, system-ui, sans-serif`;
-  while (ctx.measureText(text).width > 250 && size > 30) {
-    size -= 2;
+  while (ctx.measureText(text).width > 125 && size > 15) {
+    size -= 1;
     ctx.font = `700 ${size}px Geist, system-ui, sans-serif`;
   }
-  ctx.fillText(text, 256, 256);
+  ctx.fillText(text, 128, 128);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
@@ -34,13 +36,13 @@ function labelTexture(text, { bg, fg }) {
 }
 
 export function createToolkit(canvas, labels) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
   const scene = new THREE.Scene();
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  pmrem.dispose();
 
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
   camera.position.set(0, 0, 22);
@@ -49,15 +51,14 @@ export function createToolkit(canvas, labels) {
   key.position.set(4, 6, 10);
   scene.add(key, new THREE.AmbientLight("#ffffff", 0.35));
 
-  const geo = new THREE.SphereGeometry(1, 48, 32);
+  const geo = new THREE.SphereGeometry(1, 32, 24);
   const balls = labels.map((text, i) => {
     const colors = PALETTE[i % PALETTE.length];
-    const mat = new THREE.MeshPhysicalMaterial({
+    // Standard material + environment light gives the glossy look without clearcoat's extra pass.
+    const mat = new THREE.MeshStandardMaterial({
       map: labelTexture(text, colors),
-      roughness: 0.35,
+      roughness: 0.22,
       metalness: 0.05,
-      clearcoat: 1,
-      clearcoatRoughness: 0.2,
     });
     const mesh = new THREE.Mesh(geo, mat);
     const r = 0.78 + Math.random() * 0.32;
@@ -106,6 +107,7 @@ export function createToolkit(canvas, labels) {
     camera.position.z = w / h < 1 ? 22 / Math.max(w / h, 0.55) : 22;
     camera.updateProjectionMatrix();
   }
+  const trackQuality = adaptivePixelRatio(renderer, resize);
   new ResizeObserver(resize).observe(canvas);
   resize();
 
@@ -167,6 +169,7 @@ export function createToolkit(canvas, labels) {
     requestAnimationFrame(frame);
     const dt = Math.min(clock.getDelta(), 1 / 30);
     if (!visible) return;
+    trackQuality(dt);
     // Sub-step for stable collisions.
     step(dt / 2);
     step(dt / 2);

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import landPoints from "./land-points.json";
+import { adaptivePixelRatio } from "./quality.js";
 
 const R = 1;
 const DEG = Math.PI / 180;
@@ -117,7 +118,7 @@ function makeAtmosphere() {
       }
     `,
   });
-  return new THREE.Mesh(new THREE.SphereGeometry(R * 1.18, 64, 64), mat);
+  return new THREE.Mesh(new THREE.SphereGeometry(R * 1.18, 48, 32), mat);
 }
 
 function makeArc(from, to) {
@@ -184,8 +185,7 @@ function makeMarker(city, color) {
 }
 
 export function createGlobe(canvas, labelsEl) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
@@ -196,7 +196,7 @@ export function createGlobe(canvas, labelsEl) {
 
   // Dark core hides the dots on the far side and gives the globe some body.
   const core = new THREE.Mesh(
-    new THREE.SphereGeometry(R * 0.995, 64, 64),
+    new THREE.SphereGeometry(R * 0.995, 48, 32),
     new THREE.MeshBasicMaterial({ color: "#0c1018", transparent: true, opacity: 0.92 })
   );
   globe.add(core);
@@ -276,15 +276,25 @@ export function createGlobe(canvas, labelsEl) {
     parallax.ty = (e.clientY / window.innerHeight - 0.5) * 2;
   });
 
+  // Canvas and label sizes are cached so the frame loop never forces a layout.
+  let w = 0;
+  let h = 0;
+  function measureLabels() {
+    labelData.forEach((l) => (l.width = l.el.offsetWidth));
+  }
   function resize() {
-    const { clientWidth: w, clientHeight: h } = canvas;
+    w = canvas.clientWidth;
+    h = canvas.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    dots.material.uniforms.uSize.value = 2.6 * Math.min(window.devicePixelRatio, 2) * (h / 700);
+    dots.material.uniforms.uSize.value = 2.6 * renderer.getPixelRatio() * (h / 700);
+    measureLabels();
   }
+  const trackQuality = adaptivePixelRatio(renderer, resize);
   new ResizeObserver(resize).observe(canvas);
+  document.fonts?.ready.then(measureLabels);
   resize();
 
   let visible = true;
@@ -293,11 +303,13 @@ export function createGlobe(canvas, labelsEl) {
   const clock = new THREE.Clock();
   const tmp = new THREE.Vector3();
   const normal = new THREE.Vector3();
+  const toCam = new THREE.Vector3();
 
   function frame() {
     requestAnimationFrame(frame);
     const dt = Math.min(clock.getDelta(), 0.05);
-    if (!visible) return;
+    if (!visible || !w) return;
+    trackQuality(dt);
     const t = clock.elapsedTime;
 
     if (focus) {
@@ -336,20 +348,22 @@ export function createGlobe(canvas, labelsEl) {
 
     renderer.render(scene, camera);
 
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
     globe.updateMatrixWorld();
-    const left = canvas.getBoundingClientRect().left;
-    labelData.forEach(({ el, local }) => {
-      tmp.copy(local).applyMatrix4(globe.matrixWorld);
+    labelData.forEach((l) => {
+      tmp.copy(l.local).applyMatrix4(globe.matrixWorld);
       normal.copy(tmp).normalize();
-      const towardCam = normal.dot(tmp.clone().sub(camera.position).normalize().negate());
+      toCam.copy(camera.position).sub(tmp).normalize();
+      const towardCam = normal.dot(toCam);
+      const opacity = towardCam > 0.15 ? Math.min(1, (towardCam - 0.15) * 5) : 0;
+      // Hidden labels on the far side don't need any style writes.
+      if (opacity === 0 && l.opacity === 0) return;
       tmp.project(camera);
       const x = ((tmp.x + 1) / 2) * w;
       const y = ((1 - tmp.y) / 2) * h;
-      const flip = left + x + el.offsetWidth + 24 > window.innerWidth;
-      el.style.transform = `translate(${flip ? x - el.offsetWidth - 24 : x}px, ${y}px)`;
-      el.style.opacity = towardCam > 0.15 ? Math.min(1, (towardCam - 0.15) * 5) : 0;
+      const flip = x + l.width + 24 > w;
+      l.el.style.transform = `translate3d(${(flip ? x - l.width - 24 : x).toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+      if (opacity !== l.opacity) l.el.style.opacity = opacity.toFixed(2);
+      l.opacity = opacity;
     });
   }
   frame();
