@@ -363,6 +363,9 @@
               <span class="cform__pill" aria-hidden="true"></span>
             </div>
 
+            <!-- Honeypot: hidden from people, filled in by spam bots, ignored by Formspree -->
+            <input type="text" name="_gotcha" class="cform__trap" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
             <div class="cform__grid">
               <label class="field">
                 <input name="name" type="text" required autocomplete="name" placeholder=" " />

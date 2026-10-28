@@ -1932,6 +1932,25 @@ img {
   color: rgb(var(--on-violet-rgb));
   box-shadow: 0 10px 40px -12px rgba(var(--violet-rgb), 0.7);
 }
+.cform__trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.btn.is-loading {
+  opacity: 0.75;
+  pointer-events: none;
+}
+.btn.is-loading svg {
+  animation: nudge 0.8s ease-in-out infinite alternate;
+}
+@keyframes nudge {
+  to {
+    transform: translate(4px, -4px);
+  }
+}
 .cform__note {
   flex: 1;
   min-width: 200px;

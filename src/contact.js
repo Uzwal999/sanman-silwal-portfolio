@@ -2,6 +2,11 @@ import gsap from "gsap";
 
 const EMAIL = "sanmansilwal@gmail.com";
 
+// Formspree form ID: the part after /f/ in the form's endpoint (e.g. "xqazbkpo").
+// When set, enquiries are delivered straight to the inbox. When empty, the form
+// falls back to opening the visitor's own email app with the message filled in.
+const FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_ID || "";
+
 const MODES = {
   hire: { submit: "Send hiring enquiry" },
   job: { submit: "Send job enquiry" },
@@ -41,6 +46,10 @@ function compose(form) {
       ["CV / LinkedIn", get("cv")],
     ])}\n\nSent from your portfolio website`,
   };
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 }
 
 export async function copyText(text) {
@@ -96,6 +105,7 @@ export function createContactForm({ toast }) {
   const grid = form.querySelector(".cform__grid");
   const foot = form.querySelector(".cform__foot");
   const done = form.querySelector(".cform__done");
+  const submitBtn = form.querySelector("[type=submit]");
   let last = null;
 
   function setMode(mode) {
@@ -116,7 +126,13 @@ export function createContactForm({ toast }) {
     );
   }
 
-  function showDone(show) {
+  function showDone(show, sent = false) {
+    const copy = done.querySelector("[data-action=copy-message]");
+    done.querySelector("h3").textContent = sent ? "Message sent — thank you!" : "Your email is ready to send";
+    done.querySelector("p").innerHTML = sent
+      ? `Sanman will get back to you at <b>${escapeHtml(form.elements.email.value)}</b> soon.`
+      : `Your email app should have opened with the message filled in. If it didn't, copy it and send it to <b>${EMAIL}</b>.`;
+    copy.hidden = sent;
     grid.hidden = show;
     foot.hidden = show;
     tabs[0].parentElement.hidden = show;
@@ -145,10 +161,47 @@ export function createContactForm({ toast }) {
       return;
     }
     last = compose(form);
-    burst(form.querySelector("[type=submit]"));
+    if (FORMSPREE_ID) sendViaFormspree();
+    else openEmailApp();
+  });
+
+  function openEmailApp() {
+    burst(submitBtn);
     window.location.href = `mailto:${EMAIL}?subject=${encodeURIComponent(last.subject)}&body=${encodeURIComponent(last.body)}`;
     showDone(true);
-  });
+  }
+
+  async function sendViaFormspree() {
+    const label = submitText.textContent;
+    submitBtn.classList.add("is-loading");
+    submitBtn.disabled = true;
+    submitText.textContent = "Sending…";
+    try {
+      const data = new FormData(form);
+      const payload = {
+        _subject: last.subject,
+        enquiry_type: form.dataset.mode === "hire" ? "Hiring enquiry" : "Job enquiry",
+        message: last.body,
+        email: data.get("email"),
+        _gotcha: data.get("_gotcha") || "",
+      };
+      const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`Formspree responded ${res.status}`);
+      burst(submitBtn);
+      showDone(true, true);
+    } catch {
+      toast("Couldn't send just now — opening your email app instead");
+      openEmailApp();
+    } finally {
+      submitBtn.classList.remove("is-loading");
+      submitBtn.disabled = false;
+      submitText.textContent = label;
+    }
+  }
 
   form.querySelector("[data-action=copy-message]").addEventListener("click", async () => {
     if (!last) return;
@@ -160,6 +213,10 @@ export function createContactForm({ toast }) {
     showDone(false);
     setMode(form.dataset.mode);
   });
+
+  if (FORMSPREE_ID) {
+    form.querySelector(".cform__note").textContent = "Goes straight to Sanman's inbox — no email app needed.";
+  }
 
   setMode(form.dataset.mode);
   return { form, setMode };
