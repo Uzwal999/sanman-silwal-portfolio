@@ -1667,6 +1667,10 @@ img {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+.ccard svg.is-filled {
+  fill: var(--accent);
+  stroke: none;
+}
 .ccard__body {
   min-width: 0;
   flex: 1;
