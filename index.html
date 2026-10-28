@@ -6,11 +6,11 @@
     <title>Sanman Silwal — HR Manager & Talent Acquisition</title>
     <meta
       name="description"
-      content="Sanman Silwal — HR & Compliance professional in Kathmandu with 8+ years in talent acquisition, employee relations and HR operations, recruiting across Nepal, the UK, US and Canada."
+      content="Sanman Silwal — HR & Compliance professional in Kathmandu with 8+ years in talent acquisition, employee relations and HR operations, recruiting across Nepal, the UK, USA, Canada, Dubai and Australia."
     />
     <meta name="theme-color" content="#0a0b10" />
     <meta property="og:title" content="Sanman Silwal — HR Manager & Talent Acquisition" />
-    <meta property="og:description" content="People-first HR leader. 8+ years hiring, developing and retaining talent across Nepal, the UK, US & Canada." />
+    <meta property="og:description" content="People-first HR leader. 8+ years hiring, developing and retaining talent across Nepal, the UK, USA, Canada, Dubai & Australia." />
     <meta property="og:image" content="./og-image.jpg" />
     <meta property="og:type" content="website" />
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
@@ -31,16 +31,38 @@
 
     <div class="cursor" aria-hidden="true"></div>
 
+    <div class="progress" aria-hidden="true"><span></span></div>
+    <div class="toast" role="status" aria-live="polite"></div>
+
     <header class="nav">
       <a href="#top" class="nav__logo" data-cursor="link">SS</a>
-      <a href="mailto:sanmansilwal1@gmail.com" class="nav__email" data-cursor="link">sanmansilwal1@gmail.com</a>
-      <nav class="nav__links">
-        <a href="#about" data-cursor="link">About</a>
-        <a href="#career" data-cursor="link">Career</a>
-        <a href="#expertise" data-cursor="link">Expertise</a>
-        <a href="#contact" data-cursor="link">Contact</a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#about" class="roll" data-cursor="link">About</a>
+        <a href="#career" class="roll" data-cursor="link">Career</a>
+        <a href="#expertise" class="roll" data-cursor="link">Expertise</a>
+        <a href="#contact" class="roll" data-cursor="link">Contact</a>
       </nav>
+      <div class="nav__actions">
+        <a href="#connect" class="btn btn--primary btn--sm" data-mode="hire" data-magnetic>Hire me</a>
+        <button class="nav__burger" aria-label="Open menu" aria-expanded="false" aria-controls="menu">
+          <span></span><span></span>
+        </button>
+      </div>
     </header>
+
+    <div class="menu" id="menu" aria-hidden="true">
+      <nav class="menu__links" aria-label="Mobile">
+        <a href="#about"><i>01</i>About</a>
+        <a href="#career"><i>02</i>Career</a>
+        <a href="#expertise"><i>03</i>Expertise</a>
+        <a href="#credentials"><i>04</i>Credentials</a>
+        <a href="#contact"><i>05</i>Contact</a>
+      </nav>
+      <div class="menu__cta">
+        <a href="#connect" class="btn btn--primary" data-mode="hire">Hire me</a>
+        <a href="#connect" class="btn btn--ghost" data-mode="job">Want a job?</a>
+      </div>
+    </div>
 
     <aside class="socials" aria-label="Social links">
       <a href="https://www.linkedin.com/in/sanman-silwal" target="_blank" rel="noopener" aria-label="LinkedIn" data-cursor="link">
@@ -75,6 +97,13 @@
               <span class="split">SANMAN</span>
               <span class="split split--outline">SILWAL</span>
             </h1>
+            <div class="hero__cta">
+              <a href="#connect" class="btn btn--primary" data-mode="hire" data-magnetic data-cursor="link">
+                Hire me
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </a>
+              <a href="#connect" class="btn btn--ghost" data-mode="job" data-magnetic data-cursor="link">Want a job?</a>
+            </div>
           </div>
           <div class="hero__right">
             <p class="hero__a reveal-up">A People-First</p>
@@ -100,17 +129,43 @@
             <p class="about__body">
               I'm an HR &amp; Compliance professional based in Kathmandu with over eight years across Human
               Resources, Talent Acquisition, Employee Relations and HR Operations. I've run international
-              recruitment for the UK, US &amp; Canadian markets, built onboarding and performance systems, and
-              kept organisations compliant with labour law — while aligning HR strategy with business goals.
+              recruitment for the UK, USA, Canada, Dubai and Australia, built onboarding and performance
+              systems, and kept organisations compliant with labour law — while aligning HR strategy with
+              business goals.
             </p>
+            <div class="markets">
+              <p class="markets__title">Hiring markets <span>— tap one to fly there</span></p>
+              <div class="markets__list">
+                <button class="chip is-home" data-city="Kathmandu" data-cursor="link">Nepal</button>
+                <button class="chip" data-city="London" data-cursor="link">United Kingdom</button>
+                <button class="chip" data-city="New York" data-cursor="link">USA</button>
+                <button class="chip" data-city="Toronto" data-cursor="link">Canada</button>
+                <button class="chip" data-city="Dubai" data-cursor="link">Dubai, UAE</button>
+                <button class="chip" data-city="Sydney" data-cursor="link">Australia</button>
+              </div>
+            </div>
             <div class="stats">
               <div class="stat"><span class="stat__num" data-count="8">0</span><span class="stat__plus">+</span><span class="stat__label">Years in HR &amp; operations</span></div>
-              <div class="stat"><span class="stat__num" data-count="4">0</span><span class="stat__label">Hiring markets — NP, UK, US, CA</span></div>
+              <div class="stat"><span class="stat__num" data-count="6">0</span><span class="stat__label">Hiring markets worldwide</span></div>
               <div class="stat"><span class="stat__num" data-count="4">0</span><span class="stat__label">Organisations served</span></div>
               <div class="stat"><span class="stat__num" data-count="3">0</span><span class="stat__label">Languages spoken</span></div>
             </div>
           </div>
         </section>
+      </div>
+
+      <!-- Marquee -->
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee__row">
+          <div class="marquee__track">
+            <span>Nepal</span><i>✦</i><span>United Kingdom</span><i>✦</i><span>USA</span><i>✦</i><span>Canada</span><i>✦</i><span>Dubai</span><i>✦</i><span>Australia</span><i>✦</i>
+          </div>
+        </div>
+        <div class="marquee__row marquee__row--alt">
+          <div class="marquee__track">
+            <span>Talent Acquisition</span><i>●</i><span>Employee Relations</span><i>●</i><span>HR Compliance</span><i>●</i><span>Payroll</span><i>●</i><span>Onboarding</span><i>●</i><span>Workforce Planning</span><i>●</i>
+          </div>
+        </div>
       </div>
 
       <!-- What I do -->
@@ -126,7 +181,7 @@
             <p class="wcard__sub">Local &amp; international hiring</p>
             <p class="wcard__desc">
               End-to-end recruitment from workforce planning to offer — Boolean &amp; X-ray sourcing, technical
-              screening and structured interviews for roles across Nepal, the UK, US and Canada.
+              screening and structured interviews for roles across Nepal, the UK, USA, Canada, Dubai and Australia.
             </p>
             <p class="wcard__tags-title">Skillset &amp; tools</p>
             <ul class="tags">
@@ -224,31 +279,150 @@
 
       <!-- Contact -->
       <section class="contact" id="contact">
-        <p class="eyebrow">Contact</p>
-        <h2 class="contact__title">
-          Let's build a team<br />people <span class="accent">love</span> working in.
-        </h2>
-        <a class="contact__mail" href="mailto:sanmansilwal1@gmail.com" data-cursor="link">
-          sanmansilwal1@gmail.com
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8" /></svg>
-        </a>
-        <div class="contact__grid">
-          <div>
-            <h4>Phone</h4>
-            <a href="tel:+9779767760196" data-cursor="link">+977 976-7760196</a>
-          </div>
-          <div>
-            <h4>Social</h4>
-            <a href="https://www.linkedin.com/in/sanman-silwal" target="_blank" rel="noopener" data-cursor="link">LinkedIn ↗</a>
-          </div>
-          <div>
-            <h4>Based in</h4>
-            <p>Kathmandu, Nepal <span class="clock"></span></p>
-          </div>
+        <div class="contact__head">
+          <p class="eyebrow">Contact</p>
+          <h2 class="contact__title">
+            Let's build a team<br />people <span class="accent">love</span> working in.
+          </h2>
+          <p class="status"><span class="status__dot"></span>Available for HR leadership roles &amp; hiring partnerships</p>
         </div>
+
+        <div class="contact__layout">
+          <div class="contact__cards">
+            <div class="ccard" data-tilt>
+              <span class="ccard__icon"><svg viewBox="0 0 24 24"><path d="M3 6h18v12H3z" /><path d="M3 7l9 6 9-6" /></svg></span>
+              <div class="ccard__body">
+                <h4>Email</h4>
+                <a href="mailto:sanmansilwal1@gmail.com" data-cursor="link">sanmansilwal1@gmail.com</a>
+              </div>
+              <button class="ccard__copy" data-copy="sanmansilwal1@gmail.com" aria-label="Copy email address" data-cursor="link">
+                <svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>
+              </button>
+            </div>
+            <div class="ccard" data-tilt>
+              <span class="ccard__icon"><svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z" /></svg></span>
+              <div class="ccard__body">
+                <h4>Phone</h4>
+                <a href="tel:+9779767760196" data-cursor="link">+977 976-7760196</a>
+              </div>
+              <button class="ccard__copy" data-copy="+9779767760196" aria-label="Copy phone number" data-cursor="link">
+                <svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></svg>
+              </button>
+            </div>
+            <a class="ccard" href="https://www.linkedin.com/in/sanman-silwal" target="_blank" rel="noopener" data-tilt data-cursor="link">
+              <span class="ccard__icon"><svg viewBox="0 0 24 24"><path d="M4 9h3.5v11H4zM5.75 3.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM10 9h3.4v1.6c.5-.9 1.7-1.9 3.5-1.9 3.6 0 4.1 2.4 4.1 5.4V20h-3.5v-5.2c0-1.3 0-2.9-1.8-2.9s-2.1 1.4-2.1 2.8V20H10z" /></svg></span>
+              <div class="ccard__body">
+                <h4>LinkedIn</h4>
+                <span>in/sanman-silwal</span>
+              </div>
+              <span class="ccard__arrow"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8" /></svg></span>
+            </a>
+            <div class="ccard" data-tilt>
+              <span class="ccard__icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg></span>
+              <div class="ccard__body">
+                <h4>Based in</h4>
+                <span>Kathmandu, Nepal</span>
+              </div>
+              <span class="ccard__clock clock"></span>
+            </div>
+            <p class="contact__langs">Speaks <b>Nepali</b>, <b>English</b> &amp; <b>Hindi</b> · Works across NPT, GMT, EST, GST &amp; AEST time zones</p>
+          </div>
+
+          <form class="cform" id="connect" novalidate data-mode="hire">
+            <div class="cform__tabs" role="tablist" aria-label="What brings you here?">
+              <button type="button" role="tab" class="cform__tab" data-mode="hire" aria-selected="true" data-cursor="link">
+                <b>I'm hiring</b><span>Hire Sanman</span>
+              </button>
+              <button type="button" role="tab" class="cform__tab" data-mode="job" aria-selected="false" data-cursor="link">
+                <b>I want a job</b><span>Get matched to roles</span>
+              </button>
+              <span class="cform__pill" aria-hidden="true"></span>
+            </div>
+
+            <div class="cform__grid">
+              <label class="field">
+                <input name="name" type="text" required autocomplete="name" placeholder=" " />
+                <span>Your name</span>
+              </label>
+              <label class="field">
+                <input name="email" type="email" required autocomplete="email" placeholder=" " />
+                <span>Your email</span>
+              </label>
+              <label class="field" data-only="hire">
+                <input name="company" type="text" required autocomplete="organization" placeholder=" " />
+                <span>Company</span>
+              </label>
+              <label class="field" data-only="hire">
+                <select name="need" required>
+                  <option value="" selected disabled hidden></option>
+                  <option>Full-time HR Manager role</option>
+                  <option>Recruitment / talent acquisition support</option>
+                  <option>HR policy &amp; compliance setup</option>
+                  <option>Consulting or a short project</option>
+                  <option>Something else</option>
+                </select>
+                <span>What do you need?</span>
+              </label>
+              <label class="field" data-only="job">
+                <input name="role" type="text" required placeholder=" " />
+                <span>Role you're looking for</span>
+              </label>
+              <label class="field" data-only="job">
+                <select name="experience" required>
+                  <option value="" selected disabled hidden></option>
+                  <option>Fresher / under 1 year</option>
+                  <option>1 – 3 years</option>
+                  <option>3 – 5 years</option>
+                  <option>5 – 10 years</option>
+                  <option>10+ years</option>
+                </select>
+                <span>Experience</span>
+              </label>
+              <fieldset class="field field--chips" data-only="job">
+                <legend>Preferred locations</legend>
+                <div class="pick">
+                  <label><input type="checkbox" name="locations" value="Nepal" /><span>Nepal</span></label>
+                  <label><input type="checkbox" name="locations" value="UK" /><span>UK</span></label>
+                  <label><input type="checkbox" name="locations" value="USA" /><span>USA</span></label>
+                  <label><input type="checkbox" name="locations" value="Canada" /><span>Canada</span></label>
+                  <label><input type="checkbox" name="locations" value="Dubai" /><span>Dubai</span></label>
+                  <label><input type="checkbox" name="locations" value="Australia" /><span>Australia</span></label>
+                  <label><input type="checkbox" name="locations" value="Remote" /><span>Remote</span></label>
+                </div>
+              </fieldset>
+              <label class="field field--wide" data-only="job">
+                <input name="cv" type="url" placeholder=" " />
+                <span>Link to your CV or LinkedIn (optional)</span>
+              </label>
+              <label class="field field--wide">
+                <textarea name="message" rows="4" required placeholder=" "></textarea>
+                <span data-hire="Tell me about the role or project" data-job="Tell me about yourself and what you're after">Tell me about the role or project</span>
+              </label>
+            </div>
+
+            <div class="cform__foot">
+              <button type="submit" class="btn btn--primary btn--lg" data-magnetic data-cursor="link">
+                <span class="cform__submit-text">Send hiring enquiry</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5z" /></svg>
+              </button>
+              <p class="cform__note">Opens your email app with everything filled in — nothing is stored on this site.</p>
+            </div>
+
+            <div class="cform__done" hidden>
+              <div class="cform__check"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg></div>
+              <h3>Your email is ready to send</h3>
+              <p>Your email app should have opened with the message filled in. If it didn't, copy it and send it to <b>sanmansilwal1@gmail.com</b>.</p>
+              <div class="cform__done-actions">
+                <button type="button" class="btn btn--ghost" data-action="copy-message" data-cursor="link">Copy message</button>
+                <button type="button" class="btn btn--link" data-action="reset" data-cursor="link">Write another</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
         <footer class="footer">
-          <span>© <span class="year"></span> Sanman Silwal</span>
-          <a href="#top" data-cursor="link">Back to top ↑</a>
+          <span>© <span class="year"></span> Sanman Silwal · HR &amp; Talent Acquisition</span>
+          <a href="#top" class="roll" data-cursor="link">Back to top ↑</a>
         </footer>
       </section>
     </main>

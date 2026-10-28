@@ -4,11 +4,13 @@ import landPoints from "./land-points.json";
 const R = 1;
 const DEG = Math.PI / 180;
 
-const HOME = { name: "Kathmandu", lat: 27.7, lng: 85.32 };
+const HOME = { name: "Kathmandu", label: "Kathmandu, Nepal", lat: 27.7, lng: 85.32 };
 const CITIES = [
-  { name: "London", lat: 51.5, lng: -0.13 },
-  { name: "New York", lat: 40.71, lng: -74.0 },
-  { name: "Toronto", lat: 43.65, lng: -79.38 },
+  { name: "London", label: "London, UK", lat: 51.5, lng: -0.13 },
+  { name: "New York", label: "New York, USA", lat: 40.71, lng: -74.0 },
+  { name: "Toronto", label: "Toronto, Canada", lat: 43.65, lng: -79.38, below: true },
+  { name: "Dubai", label: "Dubai, UAE", lat: 25.2, lng: 55.27 },
+  { name: "Sydney", label: "Sydney, Australia", lat: -33.87, lng: 151.21 },
 ];
 
 function toVec(lat, lng, r = R) {
@@ -201,15 +203,25 @@ export function createGlobe(canvas, labelsEl) {
   // HTML labels that follow the markers.
   const labelData = [HOME, ...CITIES].map((c, i) => {
     const el = document.createElement("span");
-    el.className = "globe-label" + (i === 0 ? " globe-label--home" : "");
-    el.textContent = c.name;
+    el.className = "globe-label" + (i === 0 ? " globe-label--home" : "") + (c.below ? " globe-label--below" : "");
+    el.textContent = c.label;
     labelsEl.appendChild(el);
-    return { el, local: toVec(c.lat, c.lng, R * 1.02) };
+    return { el, city: c, marker: markers[i], local: toVec(c.lat, c.lng, R * 1.02) };
   });
 
-  // Face the North Atlantic so Nepal and North America sit on either limb.
-  const base = { x: 32 * DEG, y: -(20 + 90) * DEG };
+  // Rotation that brings a lat/lng to the front of the globe.
+  const facing = (lat, lng) => ({ x: THREE.MathUtils.clamp(lat * DEG, -0.6, 1.1), y: -(lng + 90) * DEG });
+
+  // Start facing the North Atlantic so Nepal and North America sit on either limb.
+  const base = facing(32, 20);
   const rot = { x: base.x, y: base.y };
+  let focus = null;
+  let focusHold = 0;
+  let active = null;
+  const shortest = (d) => {
+    const twoPi = Math.PI * 2;
+    return ((((d + Math.PI) % twoPi) + twoPi) % twoPi) - Math.PI;
+  };
   const vel = { x: 0, y: 0 };
   let dragging = false;
   let last = { x: 0, y: 0 };
@@ -227,6 +239,7 @@ export function createGlobe(canvas, labelsEl) {
     const dx = e.clientX - last.x;
     const dy = e.clientY - last.y;
     last = { x: e.clientX, y: e.clientY };
+    focus = null;
     vel.y = dx * 0.006;
     vel.x = dy * 0.004;
     rot.y += vel.y;
@@ -269,19 +282,23 @@ export function createGlobe(canvas, labelsEl) {
     if (!visible) return;
     const t = clock.elapsedTime;
 
-    if (!dragging) {
+    if (focus) {
+      // Fly to a chosen city along the shortest path, hold, then resume spinning.
+      const k = 1 - Math.exp(-dt * 3.2);
+      rot.y += shortest(focus.y - rot.y) * k;
+      rot.x += (focus.x - rot.x) * k;
+      focusHold -= dt;
+      if (focusHold <= 0) focus = null;
+    } else if (!dragging) {
       idle += dt;
       rot.y += vel.y;
       rot.x = THREE.MathUtils.clamp(rot.x + vel.x, -0.6, 1.1);
       vel.x *= 0.92;
       vel.y *= 0.95;
       if (idle > 2.5) {
-        // Drift back toward a gentle sway around the home view.
+        // Slow continuous spin so every hiring route comes into view.
         const k = 1 - Math.exp(-dt * 0.6);
-        const twoPi = Math.PI * 2;
-        const targetY = base.y + Math.sin(t * 0.18) * 0.45;
-        let diff = ((targetY - rot.y) % twoPi + twoPi * 1.5) % twoPi - Math.PI;
-        rot.y += diff * k;
+        rot.y += dt * 0.14 * Math.min(1, (idle - 2.5) / 2);
         rot.x += (base.x - rot.x) * k;
       }
     }
@@ -294,7 +311,8 @@ export function createGlobe(canvas, labelsEl) {
     arcs.forEach((a) => (a.material.uniforms.uTime.value = t));
     markers.forEach((m) => {
       const p = (t * 0.7 + m.userData.phase) % 1;
-      m.userData.ring.scale.setScalar(1 + p * 1.8);
+      const boost = m === active ? 1.8 : 1;
+      m.userData.ring.scale.setScalar((1 + p * 1.8) * boost);
       m.userData.ring.material.opacity = 1 - p;
     });
 
@@ -307,14 +325,29 @@ export function createGlobe(canvas, labelsEl) {
     labelData.forEach(({ el, local }) => {
       tmp.copy(local).applyMatrix4(globe.matrixWorld);
       normal.copy(tmp).normalize();
-      const facing = normal.dot(tmp.clone().sub(camera.position).normalize().negate());
+      const towardCam = normal.dot(tmp.clone().sub(camera.position).normalize().negate());
       tmp.project(camera);
       const x = ((tmp.x + 1) / 2) * w;
       const y = ((1 - tmp.y) / 2) * h;
       const flip = left + x + el.offsetWidth + 24 > window.innerWidth;
       el.style.transform = `translate(${flip ? x - el.offsetWidth - 24 : x}px, ${y}px)`;
-      el.style.opacity = facing > 0.15 ? Math.min(1, (facing - 0.15) * 5) : 0;
+      el.style.opacity = towardCam > 0.15 ? Math.min(1, (towardCam - 0.15) * 5) : 0;
     });
   }
   frame();
+
+  return {
+    flyTo(name) {
+      const entry = labelData.find((l) => l.city.name === name);
+      if (!entry) return;
+      // Land the city just right of centre so it isn't hidden behind the portrait.
+      const f = facing(entry.city.lat, entry.city.lng);
+      focus = { x: THREE.MathUtils.clamp(f.x - 0.12, -0.6, 1.1), y: f.y + 0.62 };
+      focusHold = 5;
+      idle = 0;
+      vel.x = vel.y = 0;
+      active = entry.marker;
+      labelData.forEach((l) => l.el.classList.toggle("is-active", l === entry));
+    },
+  };
 }

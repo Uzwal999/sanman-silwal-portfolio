@@ -4,6 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { createGlobe } from "./globe.js";
 import { createToolkit } from "./toolkit.js";
+import { createContactForm, copyText } from "./contact.js";
 import { career, expertise, toolkit, icons } from "./data.js";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -79,14 +80,151 @@ if (!reduceMotion) {
   gsap.ticker.lagSmoothing(0);
 }
 
+/* ---------- Toast ---------- */
+
+const toastEl = $(".toast");
+let toastTimer;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add("is-visible");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("is-visible"), 2600);
+}
+
+const contact = createContactForm({ toast });
+
+function scrollToEl(target, onComplete) {
+  const offset = target.id === "connect" ? -110 : 0;
+  if (lenis) lenis.scrollTo(target, { offset, duration: 1.4, onComplete });
+  else {
+    target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: offset ? "center" : "start" });
+    onComplete && setTimeout(onComplete, reduceMotion ? 0 : 700);
+  }
+}
+
 $$('a[href^="#"]').forEach((a) =>
   a.addEventListener("click", (e) => {
     const target = $(a.getAttribute("href"));
     if (!target) return;
     e.preventDefault();
-    lenis ? lenis.scrollTo(target, { offset: 0, duration: 1.4 }) : target.scrollIntoView({ behavior: "smooth" });
+    closeMenu();
+    const mode = a.dataset.mode;
+    if (mode) contact.setMode(mode);
+    scrollToEl(target, mode ? () => contact.form.querySelector("input:not(:disabled)").focus({ preventScroll: true }) : null);
   })
 );
+
+/* ---------- Mobile menu ---------- */
+
+const menu = $(".menu");
+const burger = $(".nav__burger");
+function openMenu() {
+  document.body.classList.add("menu-open");
+  burger.setAttribute("aria-expanded", "true");
+  menu.setAttribute("aria-hidden", "false");
+  lenis?.stop();
+  gsap.fromTo(
+    ".menu__links a, .menu__cta .btn",
+    { yPercent: 60, opacity: 0 },
+    { yPercent: 0, opacity: 1, stagger: 0.05, duration: 0.7, ease: "power4.out", delay: 0.15 }
+  );
+}
+function closeMenu() {
+  if (!document.body.classList.contains("menu-open")) return;
+  document.body.classList.remove("menu-open");
+  burger.setAttribute("aria-expanded", "false");
+  menu.setAttribute("aria-hidden", "true");
+  lenis?.start();
+}
+burger.addEventListener("click", () =>
+  document.body.classList.contains("menu-open") ? closeMenu() : openMenu()
+);
+window.addEventListener("keydown", (e) => e.key === "Escape" && closeMenu());
+
+/* ---------- Copy buttons ---------- */
+
+$$("[data-copy]").forEach((btn) =>
+  btn.addEventListener("click", async () => {
+    const ok = await copyText(btn.dataset.copy);
+    toast(ok ? `Copied ${btn.dataset.copy}` : "Couldn't copy — please select it manually");
+    if (ok) {
+      btn.classList.add("is-done");
+      setTimeout(() => btn.classList.remove("is-done"), 1600);
+    }
+  })
+);
+
+/* ---------- Rolling link text ---------- */
+
+$$(".roll").forEach((el) => {
+  const text = el.textContent.trim();
+  el.innerHTML = `<span class="roll__clip"><span class="roll__inner" data-text="${text}">${text}</span></span>`;
+});
+
+/* ---------- Magnetic buttons ---------- */
+
+if (finePointer && !reduceMotion) {
+  $$("[data-magnetic]").forEach((el) => {
+    const xTo = gsap.quickTo(el, "x", { duration: 0.5, ease: "power3.out" });
+    const yTo = gsap.quickTo(el, "y", { duration: 0.5, ease: "power3.out" });
+    el.addEventListener("pointermove", (e) => {
+      const r = el.getBoundingClientRect();
+      xTo((e.clientX - r.left - r.width / 2) * 0.35);
+      yTo((e.clientY - r.top - r.height / 2) * 0.45);
+    });
+    el.addEventListener("pointerleave", () => {
+      gsap.to(el, { x: 0, y: 0, duration: 0.9, ease: "elastic.out(1, 0.35)" });
+    });
+  });
+
+  // 3D tilt with a moving glare
+  $$("[data-tilt], .cred").forEach((el) => {
+    gsap.set(el, { transformPerspective: 800 });
+    el.addEventListener("pointermove", (e) => {
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;
+      const y = (e.clientY - r.top) / r.height;
+      el.style.setProperty("--gx", `${x * 100}%`);
+      el.style.setProperty("--gy", `${y * 100}%`);
+      gsap.to(el, { rotateY: (x - 0.5) * 10, rotateX: (0.5 - y) * 10, duration: 0.5, ease: "power2.out" });
+    });
+    el.addEventListener("pointerleave", () =>
+      gsap.to(el, { rotateY: 0, rotateX: 0, duration: 0.8, ease: "power3.out" })
+    );
+  });
+
+  // Portrait drifts against the cursor for depth
+  const px = gsap.quickTo(".portrait", "x", { duration: 1.2, ease: "power3.out" });
+  const py = gsap.quickTo(".portrait", "y", { duration: 1.2, ease: "power3.out" });
+  window.addEventListener("pointermove", (e) => {
+    px((e.clientX / innerWidth - 0.5) * -22);
+    py((e.clientY / innerHeight - 0.5) * -10);
+  });
+}
+
+/* ---------- Marquee ---------- */
+
+function marquee() {
+  const rows = $$(".marquee__row").map((row, i) => {
+    const track = $(".marquee__track", row);
+    track.innerHTML += track.innerHTML;
+    return { track, x: 0, dir: i % 2 ? 1 : -1 };
+  });
+  let boost = 0;
+  let flip = 1;
+  gsap.ticker.add((_, dt) => {
+    const v = lenis ? lenis.velocity : 0;
+    if (Math.abs(v) > 0.5) flip = Math.sign(v);
+    boost += (Math.min(Math.abs(v), 40) - boost) * 0.08;
+    rows.forEach((r) => {
+      const half = r.track.scrollWidth / 2;
+      if (!half) return;
+      r.x += r.dir * flip * (40 + boost * 18) * (dt / 1000);
+      r.x = ((r.x % half) - half) % half;
+      r.track.style.transform = `translate3d(${r.x}px,0,0) skewX(${-r.dir * flip * Math.min(boost, 20) * 0.4}deg)`;
+    });
+  });
+}
 
 /* ---------- Cursor ---------- */
 
@@ -153,12 +291,53 @@ function intro() {
     .from(".portrait img", { yPercent: 18, opacity: 0, duration: 1.5 }, 0.15)
     .from(nameLetters, { yPercent: 115, stagger: 0.035, duration: 1 }, 0.25)
     .from(".reveal-up", { y: 24, opacity: 0, stagger: 0.1, duration: 0.9 }, 0.35)
+    .from(".hero__cta .btn", { y: 30, opacity: 0, stagger: 0.12, duration: 1 }, 0.7)
     .from(".socials a, .hero__hint", { opacity: 0, y: 16, stagger: 0.08, duration: 0.8 }, 0.6);
   startRoles();
 }
 
 function scrollAnimations() {
   const mm = gsap.matchMedia();
+
+  const bar = $(".progress span");
+  const nav = $(".nav");
+  ScrollTrigger.create({
+    start: 0,
+    end: "max",
+    onUpdate: (self) => {
+      bar.style.transform = `scaleX(${self.progress})`;
+      const y = self.scroll();
+      nav.classList.toggle("is-solid", y > 40);
+      nav.classList.toggle("is-hidden", self.direction === 1 && y > 400 && !document.body.classList.contains("menu-open"));
+    },
+  });
+
+  $$(".nav__links a").forEach((link) => {
+    const section = $(link.getAttribute("href"));
+    ScrollTrigger.create({
+      trigger: section,
+      start: "top 50%",
+      end: "bottom 50%",
+      onToggle: (self) => link.classList.toggle("is-active", self.isActive),
+    });
+  });
+
+  const body = $(".about__body");
+  body.innerHTML = body.textContent
+    .trim()
+    .split(/\s+/)
+    .map((w) => `<span class="word">${w}</span>`)
+    .join(" ");
+  gsap.fromTo(
+    ".about__body .word",
+    { opacity: 0.18 },
+    {
+      opacity: 1,
+      stagger: 0.05,
+      ease: "none",
+      scrollTrigger: { trigger: body, start: "top 80%", end: "bottom 45%", scrub: true },
+    }
+  );
 
   mm.add("(min-width: 900px)", () => {
     gsap
@@ -269,13 +448,20 @@ function scrollAnimations() {
     scrollTrigger: { trigger: ".creds__grid", start: "top 80%" },
   });
 
-  gsap.from(".contact__mail, .contact__grid > div", {
+  gsap.from(".status, .ccard, .contact__langs", {
     y: 40,
     opacity: 0,
-    stagger: 0.1,
+    stagger: 0.08,
     duration: 0.9,
     ease: "power3.out",
-    scrollTrigger: { trigger: ".contact__mail", start: "top 90%" },
+    scrollTrigger: { trigger: ".contact__layout", start: "top 85%" },
+  });
+  gsap.from(".cform", {
+    y: 60,
+    opacity: 0,
+    duration: 1.1,
+    ease: "power3.out",
+    scrollTrigger: { trigger: ".cform", start: "top 90%" },
   });
 }
 
@@ -347,7 +533,7 @@ function clock() {
     minute: "2-digit",
     timeZone: "Asia/Kathmandu",
   });
-  const tick = () => (el.textContent = `· ${fmt.format(new Date())} NPT`);
+  const tick = () => (el.textContent = `${fmt.format(new Date())} NPT`);
   tick();
   setInterval(tick, 30_000);
 }
@@ -402,13 +588,25 @@ function loader() {
         lenis?.start();
         ScrollTrigger.refresh();
         intro();
+        const mode = { "#hire": "hire", "#job": "job" }[location.hash];
+        if (mode) {
+          contact.setMode(mode);
+          setTimeout(() => scrollToEl(contact.form), 900);
+        }
       }, "-=0.5");
 
     createToolkit($(".toolkit__canvas"), toolkit);
   });
 }
 
-createGlobe($(".globe"), $(".globe-labels"));
+const globe = createGlobe($(".globe"), $(".globe-labels"));
+$$(".chip[data-city]").forEach((chip) =>
+  chip.addEventListener("click", () => {
+    $$(".chip[data-city]").forEach((c) => c.classList.toggle("is-active", c === chip));
+    globe.flyTo(chip.dataset.city);
+  })
+);
+marquee();
 carousel();
 clock();
 scrollAnimations();

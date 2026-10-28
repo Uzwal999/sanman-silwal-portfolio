@@ -4,7 +4,7 @@ Personal interactive 3D portfolio for **Sanman Silwal**, HR Manager & Talent Acq
 
 ## Highlights
 
-- **3D hero globe** (Three.js) — dotted land masses with animated flight arcs from Kathmandu to London, New York and Toronto, reflecting his recruitment across Nepal, the UK, US & Canada. Drag to spin; it eases back on its own.
+- **3D hero globe** (Three.js) — dotted land masses with animated flight arcs from Kathmandu to London, New York, Toronto, Dubai and Sydney, reflecting his recruitment across Nepal, the UK, USA, Canada, Dubai & Australia. Drag to spin, or tap a market chip in the About section to fly the globe there.
 - **Sticky stage** — the portrait and globe glide aside as the About section scrolls in.
 - **Toolkit bubbles** — glossy 3D spheres with simple physics that react to the cursor; tap to scatter.
 - Loader, custom cursor, letter-by-letter text reveals, rotating roles, scroll-drawn career timeline, 3D-tilt "Areas of impact" carousel, live Kathmandu clock.

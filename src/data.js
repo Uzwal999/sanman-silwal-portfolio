@@ -69,7 +69,7 @@ export const career = [
 export const expertise = [
   {
     title: "International Recruitment",
-    tag: "UK · US · Canada",
+    tag: "UK · USA · Canada · UAE · Australia",
     text: "Sourcing and closing technical talent across time zones with Boolean & X-ray search, LinkedIn, Dice, Monster and Techfetch.",
     icon: "globe",
   },
